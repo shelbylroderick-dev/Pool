@@ -3,210 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Pool Schedule</title>
+    <title>Reston Pool Schedule Finder (2026)</title>
     <style>
         :root {
-            --primary: #0284c7;
-            --primary-dark: #0369a1;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --open: #16a34a;
-            --closed: #dc2626;
+            --primary: #005a9c;
+            --secondary: #00843d;
+            --dark: #333;
+            --light: #f4f7f6;
+            --open: #e2f0d9;
+            --closed: #fce4d6;
+            --fitness: #fff2cc;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
         }
-
         .container {
             max-width: 600px;
             margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-
-        header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
         h1 {
-            color: var(--primary-dark);
-            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 22px;
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
         }
-
         .controls {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 12px 16px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 16px;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
         }
-
-        .toggle-container {
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        input[type="date"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .toggle-group {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 15px;
+            font-weight: bold;
             cursor: pointer;
         }
-
-        .pool-grid {
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .info-banner {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .pool-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
-
         .pool-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #ccc;
             display: flex;
             justify-content: space-between;
             align-items: center;
             text-decoration: none;
             color: inherit;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
         }
-
-        .pool-card:active {
-            transform: scale(0.98);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        .pool-card:hover, .pool-card:active {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-
-        .pool-info h2 {
-            margin: 0 0 4px 0;
-            font-size: 1.1rem;
+        .pool-card.status-open {
+            background-color: var(--open);
+            border-left-color: var(--secondary);
         }
-
-        .pool-info p {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--text-light);
+        .pool-card.status-closed {
+            background-color: var(--closed);
+            border-left-color: #c00000;
         }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+        .pool-card.status-fitness {
+            background-color: var(--fitness);
+            border-left-color: #ffc000;
         }
-
-        .status-badge.open {
-            background-color: #dcfce7;
-            color: var(--open);
+        .pool-name {
+            font-weight: bold;
+            font-size: 15px;
         }
-
-        .status-badge.closed {
-            background-color: #fee2e2;
-            color: var(--closed);
+        .pool-hours {
+            font-size: 14px;
+            text-align: right;
+            max-width: 55%;
+        }
+        .map-icon {
+            font-size: 12px;
+            color: var(--primary);
+            display: block;
+            margin-top: 4px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>Pool Schedule</h1>
-        <p style="color: var(--text-light); margin: 0;">Tap a pool for Google Maps directions</p>
-    </header>
-
+    <h1>Reston Pools Today</h1>
+    
     <div class="controls">
-        <span id="current-time" style="font-weight: 500;"></span>
-        <label class="toggle-container">
-            <input type="checkbox" id="open-only-toggle">
-            <span>Open Only</span>
+        <div class="input-group">
+            <label for="dateSelect">Select a Date:</label>
+            <input type="date" id="dateSelect" min="2026-05-09" max="2026-09-20">
+        </div>
+        <label class="toggle-group">
+            <input type="checkbox" id="openOnlyToggle">
+            Show only open pools
         </label>
     </div>
 
-    <div class="pool-grid" id="pool-list">
-        </div>
+    <div id="infoBanner" class="info-banner"></div>
+    <div id="poolList" class="pool-list"></div>
 </div>
 
 <script>
-    // Pool Data Configuration
-    // Update the hours arrays below to adjust schedules (0 = Midnight, 23 = 11 PM)
-    const pools = [
-        {
-            name: "Autumnwood Pool",
-            address: "11950 Walnut Branch Rd, Reston, VA 20194",
-            openHour: 11,
-            closeHour: 19
-        },
-        {
-            name: "Glade Pool",
-            address: "11550 Glade Dr, Reston, VA 20191",
-            openHour: 11,
-            closeHour: 20
-        },
-        {
-            name: "Ridge Heights Pool",
-            address: "11500 Sunrise Valley Dr, Reston, VA 20191",
-            openHour: 11,
-            closeHour: 19
-        },
-        {
-            name: "Lake Newport Pool",
-            address: "11601 Lake Newport Rd, Reston, VA 20194",
-            openHour: 10,
-            closeHour: 20
+    // Full parsed 2026 schedule data
+    const poolData = {
+        seasons: [
+            { name: "Season 1", start: "2026-05-09", end: "2026-05-22" },
+            { name: "Season 2", start: "2026-05-23", end: "2026-06-19" },
+            { name: "Season 3", start: "2026-06-20", end: "2026-08-21" },
+            { name: "Season 4", start: "2026-08-22", end: "2026-09-07" },
+            { name: "Season 5", start: "2026-09-08", end: "2026-09-20" }
+        ],
+        schedules: {
+            "Season 1": {
+                "North Shore Heated Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "1-7 p.m.", Tue: "1-7 p.m.", Wed: "1-7 p.m.", Thu: "1-7 p.m.", Fri: "1-7 p.m." },
+                "Ridge Heights Heated Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "5-7 p.m.", Tue: "5-7 p.m.", Wed: "5-7 p.m.", Thu: "5-7 p.m.", Fri: "5-7 p.m." }
+            },
+            "Season 2": {
+                "Dogwood Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "Glade Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "Golf Course Island Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "Lake Newport Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "12 p.m. - 7 p.m.", Tue: "12 p.m. - 7 p.m.", Wed: "12 p.m. - 7 p.m.", Thu: "12 p.m. - 7 p.m.", Fri: "CLOSED" },
+                "Lake Thoreau Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Tue: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Wed: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Thu: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Fri: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)" },
+                "North Hills Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "North Shore Heated Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Tue: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Wed: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Thu: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)", Fri: "Open 11am-7pm\n(Fitness 6-9am & 7-9pm)" },
+                "Ridge Heights Heated Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "1-7 p.m.", Tue: "1-7 p.m.", Wed: "1-7 p.m.", Thu: "1-7 p.m.", Fri: "1-7 p.m." },
+                "Shadowood Heated Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" }
+            },
+            "Season 3": {
+                "Autumnwood Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "Fitness 12-6 p.m.", Tue: "11 a.m. - 7 p.m.", Wed: "CLOSED", Thu: "11 a.m. - 7 p.m.", Fri: "11 a.m. - 7 p.m." },
+                "Dogwood Pool": { Sat: "10 a.m. - 7 p.m.", Sun: "10 a.m. - 7 p.m.", Mon: "9 a.m. - 6 p.m.", Tue: "9 a.m. - 6 p.m.", Wed: "CLOSED", Thu: "9 a.m. - 6 p.m.", Fri: "9 a.m. - 6 p.m." },
+                "Glade Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "11 a.m. - 7 p.m.", Wed: "11 a.m. - 7 p.m.", Thu: "11 a.m. - 7 p.m.", Fri: "11 a.m. - 7 p.m." },
+                "Golf Course Island Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "11 a.m. - 7 p.m.", Tue: "11 a.m. - 7 p.m.", Wed: "CLOSED", Thu: "11 a.m. - 7 p.m.", Fri: "11 a.m. - 7 p.m." },
+                "Hunters Woods Pool & Spa": { Sat: "12-8 p.m.", Sun: "12-8 p.m.", Mon: "12-8 p.m.", Tue: "12-8 p.m.", Wed: "12-8 p.m.", Thu: "CLOSED", Fri: "12-8 p.m." },
+                "Lake Audubon Pool": { Sat: "12-8 p.m.", Sun: "12-8 p.m.", Mon: "12-8 p.m.", Tue: "CLOSED", Wed: "12-8 p.m.", Thu: "12-8 p.m.", Fri: "Fitness 12 - 6 p.m." },
+                "Lake Newport Pool": { Sat: "12-8 p.m.", Sun: "12-8 p.m.", Mon: "12-8 p.m.", Tue: "12-8 p.m.", Wed: "12-8 p.m.", Thu: "12-8 p.m.", Fri: "CLOSED" },
+                "Lake Thoreau Pool & Spa": { Sat: "Open 9am-7pm\n(Fitness 7-9pm)", Sun: "Open 9am-7pm\n(Fitness 7-9pm)", Mon: "Open 9am-7pm\n(Fitness 6-9am)", Tue: "Open 9am-7pm\n(Fitness 6-9am & 7-9pm)", Wed: "Fitness 6-9am & 12-9pm", Thu: "Open 9am-7pm\n(Fitness 6-9am & 7-9pm)", Fri: "Open 9am-7pm\n(Fitness 6-9am & 7-9pm)" },
+                "Newbridge Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "11 a.m. - 7 p.m.", Tue: "11 a.m. - 7 p.m.", Wed: "11 a.m. - 7 p.m.", Thu: "11 a.m. - 7 p.m.", Fri: "CLOSED" },
+                "North Hills Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "11 a.m. - 7 p.m.", Tue: "Fitness 12-6 p.m.", Wed: "11 a.m. - 7 p.m.", Thu: "CLOSED", Fri: "11 a.m. - 7 p.m." },
+                "North Shore Heated Pool & Spa": { Sat: "Open 11am-7pm\n(Fitness 7-9pm)", Sun: "Open 11am-7pm\n(Fitness 7-9pm)", Mon: "Open 12-7pm\n(Fitness 6-9am & 7-9pm)", Tue: "Open 12-7pm\n(Fitness 6-9am & 7-9pm)", Wed: "Open 12-7pm\n(Fitness 6-9am & 7-9pm)", Thu: "Open 12-7pm\n(Fitness 6-9am & 7-9pm)", Fri: "Open 12-7pm\n(Fitness 6-9am)" },
+                "Ridge Heights Heated Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "11 a.m. - 7 p.m.", Tue: "11 a.m. - 7 p.m.", Wed: "11 a.m. - 7 p.m.", Thu: "CLOSED", Fri: "11 a.m. - 7 p.m." },
+                "Shadowood Heated Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "11 a.m. - 7 p.m.", Tue: "CLOSED", Wed: "11 a.m. - 7 p.m.", Thu: "Fitness 12 - 6 p.m.", Fri: "11 a.m. - 7 p.m." },
+                "Tall Oaks Pool": { Sat: "11 a.m. - 8 p.m.", Sun: "11 a.m. - 8 p.m.", Mon: "CLOSED", Tue: "12-8 p.m.", Wed: "12-8 p.m.", Thu: "12-8 p.m.", Fri: "12-8 p.m." },
+                "Uplands Pool": { Sat: "9 a.m. - 7 p.m.", Sun: "9 a.m. - 7 p.m.", Mon: "9 a.m. - 7 p.m.", Tue: "CLOSED", Wed: "9 a.m. - 7 p.m.", Thu: "9 a.m. - 7 p.m.", Fri: "9 a.m. - 7 p.m." }
+            },
+            "Season 4": {
+                "Dogwood Pool": { Sat: "12-6 p.m.", Sun: "12-6 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "Lake Newport Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "1-7 p.m.", Tue: "1-7 p.m.", Wed: "1-7 p.m.", Thu: "1-7 p.m.", Fri: "CLOSED" },
+                "Lake Thoreau Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "Open 5-7pm\n(Fitness 7-9pm)", Wed: "Open 5-7pm\n(Fitness 7-9pm)", Thu: "Open 5-7pm\n(Fitness 7-9pm)", Fri: "Open 5-7pm\n(Fitness 7-9pm)" },
+                "North Hills Pool & Spa": { Sat: "12-6 p.m.", Sun: "12-6 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "North Shore Heated Pool & Spa": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "Open 5-7pm\n(Fitness 6-9am & 7-9pm)", Tue: "Open 5-7pm\n(Fitness 6-9am & 7-9pm)", Wed: "Open 5-7pm\n(Fitness 6-9am & 7-9pm)", Thu: "Open 5-7pm\n(Fitness 6-9am & 7-9pm)", Fri: "Open 5-7pm\n(Fitness 6-9am & 7-9pm)" },
+                "Ridge Heights Heated Pool": { Sat: "12-6 p.m.", Sun: "12-6 p.m.", Mon: "1-7 p.m.", Tue: "1-7 p.m.", Wed: "1-7 p.m.", Thu: "CLOSED", Fri: "1-7 p.m." },
+                "Shadowood Heated Pool": { Sat: "11 a.m. - 7 p.m.", Sun: "11 a.m. - 7 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" },
+                "Tall Oaks Pool": { Sat: "12-6 p.m.", Sun: "12-6 p.m.", Mon: "CLOSED", Tue: "CLOSED", Wed: "CLOSED", Thu: "CLOSED", Fri: "CLOSED" }
+            },
+            "Season 5": {
+                "Lake Newport Pool": { Sat: "Fitness Only 12-6 p.m.", Sun: "Fitness Only 12-6 p.m.", Mon: "Fitness Only 4-7 p.m.", Tue: "Fitness Only 4-7 p.m.", Wed: "Fitness Only 4-7 p.m.", Thu: "Fitness Only 4-7 p.m.", Fri: "CLOSED" },
+                "North Shore Heated Pool & Spa": { Sat: "12-6 p.m.", Sun: "12-6 p.m.", Mon: "5-7 p.m.", Tue: "5-7 p.m.", Wed: "5-7 p.m.", Thu: "5-7 p.m.", Fri: "5-7 p.m." },
+                "Ridge Heights Heated Pool": { Sat: "12-6 p.m.", Sun: "12-6 p.m.", Mon: "5-7 p.m.", Tue: "5-7 p.m.", Wed: "5-7 p.m.", Thu: "5-7 p.m.", Fri: "5-7 p.m." }
+            }
         }
-    ];
+    };
 
-    function updatePools() {
-        const now = new Date();
-        const currentHour = now.getHours();
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dateInput = document.getElementById('dateSelect');
+    const openOnlyToggle = document.getElementById('openOnlyToggle');
+    const infoBanner = document.getElementById('infoBanner');
+    const poolList = document.getElementById('poolList');
+
+    // Set default date picker to today
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+    function updatePoolStatus() {
+        const selectedDateStr = dateInput.value;
+        const showOpenOnly = openOnlyToggle.checked;
+        if (!selectedDateStr) return;
+
+        // Parse date properly to handle timezone issues correctly
+        const selectedDate = new Date(selectedDateStr + "T00:00:00"); 
+        const dayOfWeek = weekdays[selectedDate.getDay()];
         
-        // Format time display
-        document.getElementById('current-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        let activeSeason = null;
+        for (let season of poolData.seasons) {
+            if (selectedDateStr >= season.start && selectedDateStr <= season.end) {
+                activeSeason = season.name;
+                break;
+            }
+        }
 
-        const showOpenOnly = document.getElementById('open-only-toggle').checked;
-        const listContainer = document.getElementById('pool-list');
-        listContainer.innerHTML = '';
+        poolList.innerHTML = "";
 
-        pools.forEach(pool => {
-            const isOpen = currentHour >= pool.openHour && currentHour < pool.closeHour;
+        if (!activeSeason) {
+            infoBanner.textContent = "No pools scheduled open for this date.";
+            return;
+        }
+
+        infoBanner.textContent = `${activeSeason} • ${selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+
+        const currentSeasonSchedule = poolData.schedules[activeSeason];
+        let visiblePoolsCount = 0;
+
+        for (let [poolName, hoursObj] of Object.entries(currentSeasonSchedule)) {
+            const hours = hoursObj[dayOfWeek] || "CLOSED";
+            const isClosed = hours.toUpperCase() === "CLOSED";
             
-            if (showOpenOnly && !isOpen) return;
+            // Filtering logic
+            if (showOpenOnly && isClosed) {
+                continue; 
+            }
 
+            visiblePoolsCount++;
+
+            let statusClass = "status-open";
+            if (isClosed) {
+                statusClass = "status-closed";
+            } else if (hours.toUpperCase().includes("FITNESS ONLY") || hours.startsWith("Fitness")) {
+                statusClass = "status-fitness";
+            }
+
+            // Create an anchor tag instead of a div so it acts as a link
             const card = document.createElement('a');
-            card.className = 'pool-card';
-            // Formats maps URL safely for tap-to-navigate
-            card.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pool.name + ' ' + pool.address)}`;
-            card.target = '_blank';
+            
+            // Generate the Google Maps Directions URL
+            // Appending " Reston, VA" to make sure Maps searches the right area
+            const mapsQuery = encodeURIComponent(`${poolName}, Reston, VA`);
+            card.href = `https://www.google.com/maps/dir/?api=1&destination=${mapsQuery}`;
+            card.target = "_blank"; // Opens in a new tab or the Maps app
+            
+            card.className = `pool-card ${statusClass}`;
+            
+            const displayHours = hours.replace(/\n/g, '<br>');
 
             card.innerHTML = `
-                <div class="pool-info">
-                    <h2>${pool.name}</h2>
-                    <p>Hours: ${formatHour(pool.openHour)} - ${formatHour(pool.closeHour)}</p>
+                <div>
+                    <div class="pool-name">${poolName}</div>
+                    <span class="map-icon">📍 Tap for directions</span>
                 </div>
-                <div class="status-badge ${isOpen ? 'open' : 'closed'}">
-                    ${isOpen ? 'Open' : 'Closed'}
-                </div>
+                <div class="pool-hours">${displayHours}</div>
             `;
-            listContainer.appendChild(card);
-        });
+            poolList.appendChild(card);
+        }
+
+        if (visiblePoolsCount === 0 && showOpenOnly) {
+            poolList.innerHTML = "<div style='text-align:center; padding: 20px; color: #666;'>There are no pools open on this date.</div>";
+        }
     }
 
-    function formatHour(hour) {
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour % 12 || 12;
-        return `${displayHour} ${ampm}`;
-    }
-
-    document.getElementById('open-only-toggle').addEventListener('change', updatePools);
+    // Attach listeners
+    dateInput.addEventListener('change', updatePoolStatus);
+    openOnlyToggle.addEventListener('change', updatePoolStatus);
     
-    // Initial load and update every minute
-    updatePools();
-    setInterval(updatePools, 60000);
+    // Initialize
+    updatePoolStatus();
 </script>
 
 </body>
