@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Pool Schedule</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --open: #16a34a;
+            --closed: #dc2626;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .pool-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pool-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .pool-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .pool-info h2 {
+            margin: 0 0 4px 0;
+            font-size: 1.1rem;
+        }
+
+        .pool-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.open {
+            background-color: #dcfce7;
+            color: var(--open);
+        }
+
+        .status-badge.closed {
+            background-color: #fee2e2;
+            color: var(--closed);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Pool Schedule</h1>
+        <p style="color: var(--text-light); margin: 0;">Tap a pool for Google Maps directions</p>
+    </header>
+
+    <div class="controls">
+        <span id="current-time" style="font-weight: 500;"></span>
+        <label class="toggle-container">
+            <input type="checkbox" id="open-only-toggle">
+            <span>Open Only</span>
+        </label>
+    </div>
+
+    <div class="pool-grid" id="pool-list">
+        </div>
+</div>
+
+<script>
+    // Pool Data Configuration
+    // Update the hours arrays below to adjust schedules (0 = Midnight, 23 = 11 PM)
+    const pools = [
+        {
+            name: "Autumnwood Pool",
+            address: "11950 Walnut Branch Rd, Reston, VA 20194",
+            openHour: 11,
+            closeHour: 19
+        },
+        {
+            name: "Glade Pool",
+            address: "11550 Glade Dr, Reston, VA 20191",
+            openHour: 11,
+            closeHour: 20
+        },
+        {
+            name: "Ridge Heights Pool",
+            address: "11500 Sunrise Valley Dr, Reston, VA 20191",
+            openHour: 11,
+            closeHour: 19
+        },
+        {
+            name: "Lake Newport Pool",
+            address: "11601 Lake Newport Rd, Reston, VA 20194",
+            openHour: 10,
+            closeHour: 20
+        }
+    ];
+
+    function updatePools() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // Format time display
+        document.getElementById('current-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        const showOpenOnly = document.getElementById('open-only-toggle').checked;
+        const listContainer = document.getElementById('pool-list');
+        listContainer.innerHTML = '';
+
+        pools.forEach(pool => {
+            const isOpen = currentHour >= pool.openHour && currentHour < pool.closeHour;
+            
+            if (showOpenOnly && !isOpen) return;
+
+            const card = document.createElement('a');
+            card.className = 'pool-card';
+            // Formats maps URL safely for tap-to-navigate
+            card.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pool.name + ' ' + pool.address)}`;
+            card.target = '_blank';
+
+            card.innerHTML = `
+                <div class="pool-info">
+                    <h2>${pool.name}</h2>
+                    <p>Hours: ${formatHour(pool.openHour)} - ${formatHour(pool.closeHour)}</p>
+                </div>
+                <div class="status-badge ${isOpen ? 'open' : 'closed'}">
+                    ${isOpen ? 'Open' : 'Closed'}
+                </div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    function formatHour(hour) {
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        return `${displayHour} ${ampm}`;
+    }
+
+    document.getElementById('open-only-toggle').addEventListener('change', updatePools);
+    
+    // Initial load and update every minute
+    updatePools();
+    setInterval(updatePools, 60000);
+</script>
+
+</body>
+</html>
