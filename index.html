@@ -57,6 +57,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         input[type="date"] {
@@ -73,6 +74,9 @@
             gap: 8px;
             cursor: pointer;
             font-size: 0.95rem;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
         }
 
         .season-badge {
@@ -83,6 +87,24 @@
             font-size: 0.85rem;
             font-weight: 600;
             color: #475569;
+        }
+
+        .alert-button {
+            display: block;
+            text-align: center;
+            background-color: #f59e0b; /* Amber alert color */
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-top: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .alert-button:hover {
+            background-color: #d97706;
         }
 
         .pool-list {
@@ -99,8 +121,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            text-decoration: none;
-            color: inherit;
         }
 
         .pool-info h2 {
@@ -143,24 +163,28 @@
             <input type="date" id="date-picker">
         </div>
         <div id="season-display" class="season-badge">Detecting Season...</div>
-        <div class="control-row">
-            <span id="current-time" style="font-size: 0.9rem; color: var(--text-light);"></span>
+        <div class="control-row" style="justify-content: flex-start; gap: 12px;">
             <label class="toggle-container">
-                <input type="checkbox" id="open-only-toggle">
-                <span>Open Only</span>
+                <input type="checkbox" id="open-now-toggle">
+                <span>Open Right Now</span>
+            </label>
+            <label class="toggle-container">
+                <input type="checkbox" id="open-today-toggle">
+                <span>Open Sometime Today</span>
             </label>
         </div>
+        <!-- New Alert Button -->
+        <a href="https://www.reston.org/aquatics" target="_blank" class="alert-button">
+            🚨 Check for Pool Closures Here
+        </a>
     </div>
 
     <div class="pool-list" id="pool-container"></div>
 </div>
 
 <script>
-    // Full Schedule Database parsed directly from Reston Aquatics 2026 data
     const poolSchedules = {
-        "Autumnwood Pool": {
-            3: { Sat: "11-19", Sun: "11-19", Mon: "f12-18", Tue: "11-19", Wed: "closed", Thu: "11-19", Fri: "11-19" }
-        },
+        "Autumnwood Pool": { 3: { Sat: "11-19", Sun: "11-19", Mon: "f12-18", Tue: "11-19", Wed: "closed", Thu: "11-19", Fri: "11-19" } },
         "Dogwood Pool": {
             2: { Sat: "11-19", Sun: "11-19", Mon: "closed", Tue: "closed", Wed: "closed", Thu: "closed", Fri: "closed" },
             3: { Sat: "10-19", Sun: "10-19", Mon: "9-18", Tue: "9-18", Wed: "closed", Thu: "9-18", Fri: "9-18" },
@@ -174,12 +198,8 @@
             2: { Sat: "11-19", Sun: "11-19", Mon: "closed", Tue: "closed", Wed: "closed", Thu: "closed", Fri: "closed" },
             3: { Sat: "11-19", Sun: "11-19", Mon: "11-19", Tue: "11-19", Wed: "closed", Thu: "11-19", Fri: "11-19" }
         },
-        "Hunters Woods Pool & Spa": {
-            3: { Sat: "12-20", Sun: "12-20", Mon: "12-20", Tue: "12-20", Wed: "12-20", Thu: "closed", Fri: "12-20" }
-        },
-        "Lake Audubon Pool": {
-            3: { Sat: "12-20", Sun: "12-20", Mon: "12-20", Tue: "closed", Wed: "12-20", Thu: "12-20", Fri: "f12-18" }
-        },
+        "Hunters Woods Pool & Spa": { 3: { Sat: "12-20", Sun: "12-20", Mon: "12-20", Tue: "12-20", Wed: "12-20", Thu: "closed", Fri: "12-20" } },
+        "Lake Audubon Pool": { 3: { Sat: "12-20", Sun: "12-20", Mon: "12-20", Tue: "closed", Wed: "12-20", Thu: "12-20", Fri: "f12-18" } },
         "Lake Newport Pool": {
             2: { Sat: "11-19", Sun: "11-19", Mon: "12-19", Tue: "12-19", Wed: "12-19", Thu: "12-19", Fri: "closed" },
             3: { Sat: "12-20", Sun: "12-20", Mon: "12-20", Tue: "12-20", Wed: "12-20", Thu: "12-20", Fri: "closed" },
@@ -187,13 +207,11 @@
             5: { Sat: "f12-18", Sun: "f12-18", Mon: "f16-19", Tue: "f16-19", Wed: "f16-19", Thu: "f16-19", Fri: "closed" }
         },
         "Lake Thoreau Pool & Spa": {
-            2: { Sat: "11-19", Sun: "11-19", Mon: "11-19", Tue: "11-19", Wed: "11-19", Thu: "11-19", Fri: "11-19" }, // Simplification of mixed strings
+            2: { Sat: "11-19", Sun: "11-19", Mon: "11-19", Tue: "11-19", Wed: "11-19", Thu: "11-19", Fri: "11-19" },
             3: { Sat: "9-19", Sun: "9-19", Mon: "9-19", Tue: "9-19", Wed: "f12-21", Thu: "9-19", Fri: "9-19" },
             4: { Sat: "11-19", Sun: "11-19", Mon: "closed", Tue: "5-19", Wed: "5-19", Thu: "5-19", Fri: "5-19" }
         },
-        "Newbridge Pool": {
-            3: { Sat: "11-19", Sun: "11-19", Mon: "11-19", Tue: "11-19", Wed: "11-19", Thu: "11-19", Fri: "closed" }
-        },
+        "Newbridge Pool": { 3: { Sat: "11-19", Sun: "11-19", Mon: "11-19", Tue: "11-19", Wed: "11-19", Thu: "11-19", Fri: "closed" } },
         "North Hills Pool & Spa": {
             2: { Sat: "11-19", Sun: "11-19", Mon: "closed", Tue: "closed", Wed: "closed", Thu: "closed", Fri: "closed" },
             3: { Sat: "11-19", Sun: "11-19", Mon: "11-19", Tue: "f12-18", Wed: "11-19", Thu: "closed", Fri: "11-19" },
@@ -222,14 +240,11 @@
             3: { Sat: "11-20", Sun: "11-20", Mon: "closed", Tue: "12-20", Wed: "12-20", Thu: "12-20", Fri: "12-20" },
             4: { Sat: "12-18", Sun: "12-18", Mon: "closed", Tue: "closed", Wed: "closed", Thu: "closed", Fri: "closed" }
         },
-        "Uplands Pool": {
-            3: { Sat: "9-19", Sun: "9-19", Mon: "9-19", Tue: "closed", Wed: "9-19", Thu: "9-19", Fri: "9-19" }
-        }
+        "Uplands Pool": { 3: { Sat: "9-19", Sun: "9-19", Mon: "9-19", Tue: "closed", Wed: "9-19", Thu: "9-19", Fri: "9-19" } }
     };
 
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    // Set today's date in local time as picker default
     const datePicker = document.getElementById('date-picker');
     const todayLocal = new Date();
     const offset = todayLocal.getTimezoneOffset();
@@ -237,32 +252,27 @@
     datePicker.value = adjustedDate.toISOString().split('T')[0];
 
     function getSeason(date) {
-        const m = date.getMonth();
-        const d = date.getDate();
-        
-        // Convert to numerical representation for easy range checking (MMDD)
-        const val = (m + 1) * 100 + d;
-
-        if (val >= 509 && val <= 522) return { id: 1, name: "Season 1 (May 9 - May 22)" };
-        if (val >= 523 && val <= 619) return { id: 2, name: "Season 2 (May 23 - June 19)" };
-        if (val >= 620 && val <= 821) return { id: 3, name: "Season 3 (June 20 - Aug 21)" };
-        if (val >= 822 && val <= 907) return { id: 4, name: "Season 4 (Aug 22 - Sept 7)" };
-        if (val >= 908 && val <= 920) return { id: 5, name: "Season 5 (Sept 8 - Sept 20)" };
-        return { id: 0, name: "Off-Season (Pools Closed)" };
+        const val = (date.getMonth() + 1) * 100 + date.getDate();
+        if (val >= 509 && val <= 522) return { id: 1, name: "Season 1" };
+        if (val >= 523 && val <= 619) return { id: 2, name: "Season 2" };
+        if (val >= 620 && val <= 821) return { id: 3, name: "Season 3" };
+        if (val >= 822 && val <= 907) return { id: 4, name: "Season 4" };
+        if (val >= 908 && val <= 920) return { id: 5, name: "Season 5" };
+        return { id: 0, name: "Off-Season" };
     }
 
     function renderSchedule() {
-        const selectedDate = new Date(datePicker.value + 'T12:00:00'); // Force local midday to prevent midnight time zone shifting
+        const selectedDate = new Date(datePicker.value + 'T12:00:00'); 
         const dayName = dayNames[selectedDate.getDay()];
         const season = getSeason(selectedDate);
         
         document.getElementById('season-display').innerText = season.name;
-        document.getElementById('current-time').innerText = `Viewing Schedule for a ${dayName}`;
 
         const container = document.getElementById('pool-container');
         container.innerHTML = '';
 
-        const showOpenOnly = document.getElementById('open-only-toggle').checked;
+        const showOpenNow = document.getElementById('open-now-toggle').checked;
+        const showOpenToday = document.getElementById('open-today-toggle').checked;
         const currentRealHour = new Date().getHours();
         const viewingToday = new Date().toDateString() === selectedDate.toDateString();
 
@@ -273,29 +283,32 @@
             let statusText = "Closed";
             let statusClass = "closed";
             let hoursDisplay = "Closed today";
+            let isOpenNow = false;
+            let isOpenToday = false;
 
             if (seasonRules && seasonRules[dayName] && seasonRules[dayName] !== "closed") {
-                const ruleString = seasonRules[dayName]; // e.g. "11-19" or "f12-18"
+                isOpenToday = true;
+                const ruleString = seasonRules[dayName]; 
                 const isFitnessOnly = ruleString.startsWith('f');
                 const cleanRule = isFitnessOnly ? ruleString.substring(1) : ruleString;
                 const [openH, closeH] = cleanRule.split('-').map(Number);
 
                 hoursDisplay = `${formatHour(openH)} - ${formatHour(closeH)}${isFitnessOnly ? ' (Fitness)' : ''}`;
 
-                // Evaluate real-time openness if user is looking at the current day
                 if (viewingToday) {
                     if (currentRealHour >= openH && currentRealHour < closeH) {
+                        isOpenNow = true;
                         statusText = isFitnessOnly ? "Fitness Only" : "Open";
                         statusClass = isFitnessOnly ? "fitness" : "open";
                     }
                 } else {
-                    // For alternate days, display generic capability
                     statusText = isFitnessOnly ? "Fitness Session" : "Scheduled Open";
                     statusClass = isFitnessOnly ? "fitness" : "open";
                 }
             }
 
-            if (showOpenOnly && statusClass === "closed") return;
+            if (showOpenToday && !isOpenToday) return;
+            if (showOpenNow && !isOpenNow) return;
 
             const card = document.createElement('div');
             card.className = 'pool-card';
@@ -317,9 +330,9 @@
     }
 
     datePicker.addEventListener('change', renderSchedule);
-    document.getElementById('open-only-toggle').addEventListener('change', renderSchedule);
+    document.getElementById('open-now-toggle').addEventListener('change', renderSchedule);
+    document.getElementById('open-today-toggle').addEventListener('change', renderSchedule);
 
-    // Run layout execution
     renderSchedule();
 </script>
 
